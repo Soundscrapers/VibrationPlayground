@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vibration Playground</title>
+  <link rel="stylesheet" href="site.css">
+</head>
+<body data-page="index">
+
+  <nav id="vp-nav"></nav>
+
+  <main class="landing">
+
+    <div class="page-header">
+      <h1>Vibration Playground v0.21</h1>
+      <p>These are simulations of wave phenomena in solid materials, designed to demonstrate how sound and vibration works while being fun and musical to play with. Best viewed on a desktop or laptop computer.</p>
+    </div>
+
+    <div class="world-grid">
+
+      <a href="mass.html" class="world-card mass">
+        <div class="card-image">
+          <img src="img/mass1.png" alt="Mass World">
+    
+        </div>
+        <div class="card-body">
+          <div class="card-title">Mass</div>
+          <div class="card-desc">Coupled oscillators on springs. Add masses, toggle coupling, drag and release. Invidual masses begin to move in wave patterns.</div>
+        </div>
+      </a>
+
+      <a href="string.html" class="world-card string">
+        <div class="card-image">
+          <img src="img/string2.png" alt="String World">
+        </div>
+        <div class="card-body">
+          <div class="card-title">String</div>
+          <div class="card-desc">A vibrating string you can pluck and strike. Wave propagation slow enough to watch, with sound at audible pitch independently.</div>
+        </div>
+      </a>
+
+      <a href="lattice.html" class="world-card lattice">
+        <div class="card-image">
+          <img src="img/lattice1.png" alt="Lattice World">
+        
+        </div>
+        <div class="card-body">
+          <div class="card-title">Lattice</div>
+          <div class="card-desc">A 2D triangular grid of coupled oscillators. Tonnetz pitch geometry — you can hear the shape of the lattice as waves propagate through it.</div>
+        </div>
+      </a>
+
+      <a href="membrane.html" class="world-card membrane">
+        <div class="card-image">
+ <img src="img/membrane1.png" alt="Membrane World">
+        </div>
+        <div class="card-body">
+          <div class="card-title">Membrane</div>
+          <div class="card-desc">A vibrating rectangular membrane. In development.</div>
+        </div>
+      </a>
+      
+         <a href="beam.html" class="world-card beam">
+        <div class="card-image">
+ <img src="img/beam1.png" alt="Beam World">
+        </div>
+        <div class="card-body">
+          <div class="card-title">Beam</div>
+          <div class="card-desc">A vibrating beam with tools for changing shape. In development</div>
+        </div>
+      </a>
+
+    </div>
+
+    <footer>
+      <p>Built with <a href="https://p5js.org">p5.js</a>, <a href="https://tonejs.github.io">Tone.js</a>, and <a href="https://mathjs.org">math.js</a>. </p>
+    </footer>
+
+  </main>
+
+  <script src="ui/Nav.js"></script>
+</body>
+</html>

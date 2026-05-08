@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>String — Vibration Playground</title>
+  <link rel="stylesheet" href="site.css">
+  <link rel="stylesheet" href="ui/menu.css">
+  <style>
+    body { background: #1e1e1e; margin: 0; }
+    #vp-outer { margin: 0 auto; }
+    #canvas-container canvas { display: block; }
+  </style>
+</head>
+<body data-page="string">
+
+  <nav id="vp-nav"></nav>
+
+  <div class="world-page">
+
+    <div id="vp-outer">
+
+      <!-- Flex row: sidebar + canvas side by side -->
+      <div id="vp-workspace">
+        <div id="vp-tools"></div>
+        <div id="canvas-container"></div>
+      </div>
+
+      <!-- Document-flow control panel below workspace -->
+      <div id="vp-controls">
+        <div id="vp-tab-bar"></div>
+        <div id="vp-tab-geometry" class="vp-tab-content"></div>
+        <div id="vp-tab-physics"  class="vp-tab-content"></div>
+        <div id="vp-tab-sound"    class="vp-tab-content"></div>
+      </div>
+
+    </div>
+
+    <!-- ============================================================
+         How to play
+         ============================================================ -->
+    <div class="world-prose">
+
+      <h2>How to play</h2>
+
+      <p>The canvas shows a vibrating string stretched between two endpoints. The wave motion runs slowly enough to watch a pulse travel from one end to the other, bounce off the boundary, and come back. (You can slow it down even further by opening the Physics tab at the bottom of the canvas.) The sound you hear is the same vibration at a much higher speed — audible pitch rather than visual motion.</p>
+
+      <h3>Strike</h3>
+
+      <p>Click and quickly release on the string body. This delivers a velocity impulse at the click point — a short, sharp hit, like tapping a guitar string with your finger. The shape of the impulse determines which modes get excited: striking near the middle favors the fundamental and odd harmonics; striking near a quarter-point brings out the even ones. The physics menu contains a slider which will increase the width of the "hammer".</p>
+
+      <h3>Pluck</h3>
+
+      <p>Click on the string and hold for a moment, then drag up or down. You'll see the string deform into a triangle with the peak at your grab point. Release to let it go. The triangular shape decomposes into a set of sinusoidal modes, each of which then oscillates and decays independently. You can hear the difference between a pluck near the middle (rounder, dominated by the fundamental) and a pluck near the end (brighter, more upper harmonics).</p>
+
+      <h3>Boundary conditions</h3>
+
+      <p>Click near either endpoint to toggle its boundary condition between fixed (pinned, shown as a filled dot) and free (open, shown as a ring). A fixed end reflects waves with inverted polarity. A free end reflects without inversion. Try switching one end to free and plucking — the pitch drops to half, because the fundamental mode shape changes from a half-wave to a quarter-wave.</p>
+
+      <h3>Multiple strings</h3>
+
+      <p>Use the <strong>SCENE</strong> button in the sidebar to load Solo (1 string), Quintet (5 strings), or Full Spread (9 strings). In multi-string mode, the <strong>STRUM</strong> button activates the strum tool — sweep the mouse vertically to excite each string as you cross it, like drawing a bow across strings.</p>
+
+      <h3>Speed and damping</h3>
+
+      <p>The speed slider controls how fast the simulation runs. Slow it down to watch a pulse travel in detail. The damping slider controls how quickly oscillations decay — high damping absorbs energy quickly; zero damping lets the string ring indefinitely. The slope slider adds extra damping to higher modes, mimicking the way real strings lose high-frequency energy faster than low.</p>
+      
+       <h3>Fourier Analysis</h3>
+
+      <p>The physics menu contains a checkbox for "Fourier Analysis".  Check this box to see the individual sine waves which are used to sum up to the string wave that we see. These fourier sine waves represent harmonic mode shapes which contribute differently depending on where the string was plucked or struck.</p>
+
+
+      <hr>
+
+      <h3>What's happening underneath</h3>
+
+      <p class="physics-note">The string is solved analytically and assumes a small angle approximation. You might notice that the string behaves strangely if it it recieves a large displacement. The small angle approximation does not account for nonlinear effects or curvature of the string which exists in the physical world. Mode shapes are sin(n * pi * x / L) and frequencies are n * pi * c / L, where c is the wave speed. The visual physics runs at a slow wave speed (roughly 2 m/s, so a pulse takes about half a second to cross the string). Sound runs independently via Karplus-Strong synthesis at audible pitch. Both represent the same physical phenomenon at different timescales. When you pluck, the triangular displacement is projected into the modal basis via the orthogonality of the sine functions; the resulting modal amplitudes decay exponentially, each at its own rate depending on its natural frequency.</p>
+
+    </div>
+
+  </div>
+
+  <!-- Scenario library for the scenarios flyout (read by Menu.js).
+       String scenarios only change the count; all other params are shared.
+       Each value is a VIBRATION_PRESET-format object matching
+       PresetLoader.load() expectations. -->
+  <script>
+    var STRING_BASE_CFG = {
+      tuning:        'fifths',
+      centerHz:      294,
+      length:        1,
+      density:       5,
+      modes:         20,
+      spatialPoints: 400,
+      boundaryLeft:  'fixed',
+      boundaryRight: 'fixed',
+      damping:       { base: 0.1, freqScale: 0.0 }
+    };
+
+    window.VP_SCENARIOS = {
+      // Solo: one string, full control over pluck/strike position.
+      'solo': {
+        world:   'strings',
+        strings: Object.assign({ count: 1 }, STRING_BASE_CFG),
+        initial: { type: 'rest' },
+        sound:   { muted: false }
+      },
+
+      // Fourier: single string, Fourier overlay auto-enabled.
+      // Identical physics to Solo; the scenario click handler in Menu.js
+      // enables VP_OVERLAYS.fourier so the Fourier series is drawn immediately.
+      'fourier': {
+        world:   'strings',
+        strings: Object.assign({ count: 1 }, STRING_BASE_CFG),
+        initial: { type: 'rest' },
+        sound:   { muted: false }
+      },
+      // Quintet: five strings tuned in perfect fifths (D3 to D5 approximately).
+      'quintet': {
+        world:   'strings',
+        strings: Object.assign({ count: 5 }, STRING_BASE_CFG),
+        initial: { type: 'rest' },
+        sound:   { muted: false }
+      },
+      // Full Spread: nine strings -- the widest stack of fifths.
+      'full': {
+        world:   'strings',
+        strings: Object.assign({ count: 9 }, STRING_BASE_CFG),
+        initial: { type: 'rest' },
+        sound:   { muted: false }
+      }
+    };
+  </script>
+
+  <!-- Default preset: one string (solo). -->
+  <script>
+    window.VIBRATION_PRESET = {
+      world:   'strings',
+      strings: Object.assign({ count: 1 }, STRING_BASE_CFG),
+      initial: { type: 'rest' },
+      sound:   { muted: false }
+    };
+  </script>
+
+  <!-- Script loading order: physics deps first, then observers, then UI, then sketch. -->
+  <script src="lib/p5.js"></script>
+  <script src="lib/math.js"></script>
+  <script src="lib/Tone.js"></script>
+  <script src="physics/StringDefinition.js"></script>
+  <script src="physics/ModalState.js"></script>
+  <script src="render/StringVisualObserver.js"></script>
+  <script src="sound/StringSoundObserver.js"></script>
+  <script src="ui/StrikeTool.js"></script>
+  <script src="ui/StringInteractionController.js"></script>
+  <script src="PresetLoader.js"></script>
+  <script src="ui/Nav.js"></script>
+  <script src="ui/HelperMode.js"></script>
+  <script src="ui/Menu.js"></script>
+  <script src="2D-sketch.js"></script>
+
+</body>
+</html>

@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mass — Vibration Playground</title>
+  <link rel="stylesheet" href="site.css">
+  <link rel="stylesheet" href="ui/menu.css">
+  <style>
+    body { background: #1e1e1e; margin: 0; }
+    #vp-outer { margin: 0 auto; }
+    #canvas-container canvas { display: block; }
+  </style>
+</head>
+<body data-page="mass">
+
+  <nav id="vp-nav"></nav>
+
+  <div class="world-page">
+
+    <div id="vp-outer">
+
+      <!-- Flex row: sidebar + canvas side by side -->
+      <div id="vp-workspace">
+        <div id="vp-tools"></div>
+        <div id="canvas-container"></div>
+      </div>
+
+      <!-- Document-flow control panel below workspace -->
+      <div id="vp-controls">
+        <div id="vp-tab-bar"></div>
+        <div id="vp-tab-geometry" class="vp-tab-content"></div>
+        <div id="vp-tab-physics"  class="vp-tab-content"></div>
+        <div id="vp-tab-sound"    class="vp-tab-content"></div>
+      </div>
+
+    </div>
+
+    <!-- ============================================================
+         How to play
+         ============================================================ -->
+    <div class="world-prose">
+
+      <h2>How to play</h2>
+
+      <p>The canvas above shows a system of masses connected to springs. Each colored arc is one mass. Its position along the arc shows displacement — how far the mass has moved from rest. The further the arc's endpoint swings from the center line, the greater the potential energy of the "spring".  As the mass swings through equilibrium it obtains its highest kinetic energy and the color of the mass turns brightest.</p>
+
+      <p>Click anywhere on the canvas to begin. Sound starts on your first interaction. Click on an arc and drag it to pull the mass away from equilibrium. Release to let it go. The mass oscillates, and you hear a tone whose loudness follows the mass's velocity — loud when it moves fast, quiet at the turning points. </p>
+
+      <h3>Add and remove masses</h3>
+
+      <p>Click in the empty space beyond the outermost arc to add a new mass. Each mass gets its own pitch, spaced a perfect fifth above the last. To remove the outermost mass, press <kbd>-</kbd> to switch to the delete tool and click it. Press <kbd>V</kbd> to return to the default pointer tool.</p>
+
+      <h3>Add and remove coupling</h3>
+
+      <p>Click in the gap between two adjacent arcs to toggle a coupling spring. When two masses are coupled, energy transfers between them — you see them trade motion back and forth. Double-Click the gap between coupled masses to disconnect them. Masses can also be connected to or disconnected from "ground" by clicking where the arc meets the bottom of the canvas.</p>
+
+      <h3>Hold and fix</h3>
+
+      <p>Press <kbd>H</kbd> for the hold tool. Clicking a mass pins it in place as a boundary condition. The system's modes and frequencies change instantly — the eigenanalysis reruns with fewer degrees of freedom. Click a fixed mass again to release it. Press <kbd>R</kbd> to release all fixed and forced masses at once.</p>
+
+      <h3>Applied force</h3>
+
+      <p>Press <kbd>F</kbd> to apply a harmonic force to the right-side outermost mass. When forcing is active, a frequency button will appear in the menu on the left. Click and drag to increase or decrease the frequency of the forcing. </p>
+      
+      <h3>Mode Shapes</h3>
+
+      <p>Open up the Physics tab at the bottom of the canvas and check the "Mode Shapes" box. A series of lines which appear like constellations will indicate how the system's natural modes are activated. In the SCENES buttons, a series of numbers can be clicked which will cause the system to oscillate in these modes. </p>
+
+      <hr>
+
+      <h3>What's happening underneath</h3>
+
+      <p class="physics-note">Open up the physics, geometry and sound tabs for more detailed control over the system parameters. Every mass-spring configuration here is solved as a matrix eigenvalue problem. The stiffness and mass matrices define the system; the eigenvectors are mode shapes and the eigenvalues give natural frequencies. The simulation computes the exact closed-form solution for each mode as a damped sinusoid. When you change a spring or add a mass, the eigenproblem is re-solved and the current motion is reprojected into the new basis. Sound is driven by physical velocities. </p>
+
+    </div>
+
+  </div>
+
+  <!-- Scenario library for the scenarios flyout (read by Menu.js).
+       Each key is a scene identifier; values are VIBRATION_PRESET-format objects.
+       vpBuildMenu() calls _buildScenesForWorld() which reads this object. -->
+  <script>
+    window.VP_SCENARIOS = {
+      // Two coupled masses: classic energy transfer demonstration.
+      // Identical masses, equal ground springs, one coupling spring.
+      // The two modes are in-phase (lower) and anti-phase (higher).
+      '2coupled': {
+        world: 'mdof',
+        mdof: {
+          masses:   [1, 1],
+          kGround:  [30, 30],
+          coupling: [[0, 1, 20]],
+          damping:  { base: 0.01, frequencyScaling: 0.002 }
+        },
+        initial: { displacements: [0.4, -0.4], velocities: [0, 0] },
+        sound: { muted: false }, time: { scale: 1.0 }
+      },
+
+      // Dynamic absorber: a heavy primary mass (m=4) coupled to a light absorber (m=1).
+      // The absorber has no ground spring; it gets its restoring force only from the
+      // coupling spring. Tuned so absorber resonance = primary resonance (sqrt(k/m)).
+      // When driven at the tuned frequency the primary mass stands still.
+      'absorber': {
+        world: 'mdof',
+        mdof: {
+          masses:   [4, 1],
+          kGround:  [40, 0],
+          coupling: [[0, 1, 40]],
+          damping:  { base: 0.005, frequencyScaling: 0.001 }
+        },
+        initial: { displacements: [0.4, 0], velocities: [0, 0] },
+        sound: { muted: false }, time: { scale: 1.0 }
+      },
+
+      // 16 coupled: sixteen equal masses coupled in a chain with no ground springs.
+      // Free-free boundary conditions -- there is one zero-frequency rigid-body mode
+      // (all masses translate together).  All other modes are standing-wave patterns
+      // across the chain.  Start at rest; excite any mass to watch energy propagate.
+      //
+      // Physics index layout for N=16:
+      //   Right side: 0 (R1, innermost) ... 7 (R8, outermost right)
+      //   Left  side: 8 (L1, innermost) ... 15 (L8, outermost left)
+      //   Visual order left->right: [15,14,13,12,11,10,9,8, 0,1,2,3,4,5,6,7]
+      //
+      // Adjacent coupling pairs (15 total, all k=20):
+      //   Left half:   (14,15),(13,14),(12,13),(11,12),(10,11),(9,10),(8,9)
+      //   Crossing gap: (0,8)
+      //   Right half:  (0,1),(1,2),(2,3),(3,4),(4,5),(5,6),(6,7)
+      'coupled16': {
+        world: 'mdof',
+        mdof: {
+          masses:   [1,1,1,1,1,1,1,1, 1,1,1,1,1,1,1,1],
+          kGround:  [0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0],
+          coupling: [
+            [14,15,20],[13,14,20],[12,13,20],[11,12,20],[10,11,20],[9,10,20],[8,9,20],
+            [0,8,20],
+            [0,1,20],[1,2,20],[2,3,20],[3,4,20],[4,5,20],[5,6,20],[6,7,20]
+          ],
+          damping:  { base: 0.005, frequencyScaling: 0.0005 }
+        },
+        initial: {
+          displacements: [0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0],
+          velocities:    [0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0]
+        },
+        sound: { muted: false }, time: { scale: 1.0 }
+      },
+
+      // 16 grounded: sixteen equal masses, each on its own ground spring, no coupling.
+      // All 16 modes have the same natural frequency (degenerate).
+      // Exciting one mass does not transfer energy to its neighbors -- each mass
+      // oscillates in isolation.  Contrast with 16 coupled.
+      'grounded16': {
+        world: 'mdof',
+        mdof: {
+          masses:   [1,1,1,1,1,1,1,1, 1,1,1,1,1,1,1,1],
+          kGround:  [20,20,20,20,20,20,20,20, 20,20,20,20,20,20,20,20],
+          coupling: [],
+          damping:  { base: 0.01, frequencyScaling: 0.001 }
+        },
+        initial: {
+          displacements: [0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0],
+          velocities:    [0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0]
+        },
+        sound: { muted: false }, time: { scale: 1.0 }
+      },
+
+      // Wave: sixteen coupled masses, fixed left boundary, ground spring at right end.
+      // Displacing the rightmost mass sends a wave leftward through the chain;
+      // the wave reflects off the fixed left boundary and returns.
+      //
+      // Fixed mass: L8 (physics index 15, outermost left).  Removed from DOFs;
+      //   its coupling to L7 (index 14) appears as an extra ground spring on L7.
+      // Ground spring: R8 (physics index 7, outermost right), k=20.
+      // All other masses: no ground spring.
+      // Initial: R8 displaced to 1.0 (max); all others at rest.
+      'wave': {
+        world: 'mdof',
+        mdof: {
+          masses:   [1,1,1,1,1,1,1,1, 1,1,1,1,1,1,1,1],
+          kGround:  [0,0,0,0,0,0,0,20, 0,0,0,0,0,0,0,0],
+          coupling: [
+            [14,15,20],[13,14,20],[12,13,20],[11,12,20],[10,11,20],[9,10,20],[8,9,20],
+            [0,8,20],
+            [0,1,20],[1,2,20],[2,3,20],[3,4,20],[4,5,20],[5,6,20],[6,7,20]
+          ],
+          fixed:    [15],
+          damping:  { base: 0.001, frequencyScaling: 0.0 }
+        },
+        initial: {
+          displacements: [0,0,0,0,0,0,0,1.0, 0,0,0,0,0,0,0,0],
+          velocities:    [0,0,0,0,0,0,0,0,   0,0,0,0,0,0,0,0]
+        },
+        sound: { muted: false }, time: { scale: 1.0 }
+      }
+    };
+  </script>
+
+  <!-- Default preset: 6 masses (3 left, 3 right).
+       Physics index assignment (from MassLayout.js with N=6):
+         nRight = 3: indices 0 (R1, innermost right), 1 (R2), 2 (R3, outermost right)
+         nLeft  = 3: indices 3 (L1, innermost left),  4 (L2), 5 (L3, outermost left)
+
+       Ground springs: R3 (idx 2) and L3 (idx 5) only.
+         L3 has no couplings -- it oscillates independently on its own ground spring.
+         R3 is the right anchor of the coupling chain.
+
+       Coupling chain: L2 -- L1 -- R1 -- R2 -- R3
+         [3,4,20]: L1-L2 coupling
+         [0,3,20]: R1-L1 coupling (crosses center gap)
+         [0,1,20]: R1-R2 coupling
+         [1,2,20]: R2-R3 coupling
+         L3 (idx 5) has no couplings.
+
+       L2 (idx 4) is the free end of the chain -- no ground spring, only one coupling.
+       Energy injected into R3 travels inward through the chain toward L2.
+
+       Initial state: R3 (idx 2) at maximum displacement, all others at rest. -->
+  <script>
+    window.VIBRATION_PRESET = {
+      world: 'mdof',
+      mdof: {
+        masses:   [1, 1, 1, 1, 1, 1],
+        kGround:  [0, 0, 30, 0, 0, 30],
+        coupling: [[0, 1, 20], [0, 3, 20], [1, 2, 20], [3, 4, 20]],
+        damping:  { base: 0.01, frequencyScaling: 0.002 }
+      },
+      initial: {
+        displacements: [0, 0, 0.5, 0, 0, 0],
+        velocities:    [0, 0, 0,   0, 0, 0]
+      },
+      sound: { muted: false },
+      time:  { scale: 1.0 }
+    };
+  </script>
+
+  <!-- Script loading order per menu-plan.md.
+       Menu.js loads before sketch.js so vpBuildMenu is available at setup() time. -->
+  <script src="lib/p5.js"></script>
+  <script src="lib/math.js"></script>
+  <script src="lib/Tone.js"></script>
+  <script src="physics/MassDefinition.js"></script>
+  <script src="physics/ModalState.js"></script>
+  <script src="MassLayout.js"></script>
+  <script src="render/MassVisualObserver.js"></script>
+  <script src="sound/MassSoundObserver.js"></script>
+  <script src="ui/HoldTool.js"></script>
+  <script src="ui/KinematicTool.js"></script>
+  <script src="ui/CouplingTool.js"></script>
+  <script src="ui/MassInteractionController.js"></script>
+  <script src="PresetLoader.js"></script>
+  <script src="ui/Nav.js"></script>
+  <script src="ui/HelperMode.js"></script>
+  <script src="ui/Menu.js"></script>
+  <script src="2D-sketch.js"></script>
+
+</body>
+</html>

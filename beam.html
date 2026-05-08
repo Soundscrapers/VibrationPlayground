@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Beam — Vibration Playground</title>
+  <link rel="stylesheet" href="site.css">
+  <link rel="stylesheet" href="ui/menu.css">
+  <style>
+    body { background: #1e1e1e; margin: 0; }
+    #vp-outer { margin: 0 auto; }
+    #canvas-container { display: block; position: relative; }
+    #canvas-container canvas { display: block; }
+
+    /* Canvas overlay labels (absolute, relative to canvas-container) */
+    #end-strike-label {
+      position: absolute;
+      top: 10px;
+      right: 14px;
+      font-size: 11px;
+      letter-spacing: 0.15em;
+      pointer-events: none;
+      font-family: 'IBM Plex Mono', 'SF Mono', 'Fira Mono', monospace;
+      color: #8af;
+    }
+
+  </style>
+</head>
+<body data-page="beam">
+
+  <nav id="vp-nav"></nav>
+
+  <div class="world-page">
+
+    <div id="vp-outer">
+
+      <!-- Flex row: sidebar + canvas side by side -->
+      <div id="vp-workspace">
+        <div id="vp-tools"></div>
+        <div id="canvas-container">
+          <div id="end-strike-label"></div>
+        </div>
+      </div>
+
+      <!-- Control panel below workspace (tabs populated by Menu.js + beam-sketch.js) -->
+      <div id="vp-controls">
+        <div id="vp-tab-bar"></div>
+        <div id="vp-tab-geometry" class="vp-tab-content"></div>
+        <div id="vp-tab-physics"  class="vp-tab-content"></div>
+        <div id="vp-tab-sound"    class="vp-tab-content"></div>
+      </div>
+
+    </div>
+
+    <!-- How-to prose (constrained width for readability) -->
+    <div class="world-prose">
+
+      <h2>How to play</h2>
+
+      <p>The canvas shows an Euler-Bernoulli beam (a simplified physical model of a beam) vibrating in 3D.  Striking the beam on its end produces an extensional wave, causing the beam to expand and contract along its longitudinal axis. Striking the beam on one of its long sides produces a bending wave.  Sound frequencies do not travel at the same speed in a bending wave, which is why we sometimes hear a characteristic laser zap sound in a long wire. The higher frequency waves travel faster than the lower frequency waves.</p>
+
+      <h3>Tools</h3>
+      <p>The sidebar <strong>MOVE</strong> button sets strike mode (default). Other tools are still in development...</p>
+
+      <h3>Material and cross-section</h3>
+      <p>Open the Physics tab. Material buttons change Young's modulus and damping: glass is stiffer and wood is less stiff. Open the Geometry tab to change beam length and cross-section shape. Rectangle shows the "strong vs. weak axis" effect: bending stiffness depends on which axis the height is aligned with.</p>
+
+      <h3>Taper profile</h3>
+      <p>Drag the five control points in the taper editor to shape the cross-section profile along the beam. The marimba preset undercuts the center — this is how real marimba bars are tuned to even harmonic ratios. Preset buttons load named profiles. This section is still under development!</p>
+
+      <hr>
+
+      <p class="physics-note">Two independent ModalState systems run in parallel: bending (Euler-Bernoulli, 12 elastic + 2 rigid modes) and extensional (8 elastic + 1 rigid). Frequencies: bending omega_n = (beta_n/L)² sqrt(E*I/rho*A), extensional omega_n = n*pi/L sqrt(E/rho).</p>
+
+      <div id="info" style="margin-top:12px; display:flex; flex-wrap:wrap; gap:8px 16px; color:#555; font-size:11px; font-family:'IBM Plex Mono',monospace;">
+        <span><kbd style="background:#1e1e1e;border:1px solid #444;border-radius:2px;padding:1px 5px;font-size:10px;color:#aaa;">click</kbd> side strike</span>
+        <span><kbd style="background:#1e1e1e;border:1px solid #444;border-radius:2px;padding:1px 5px;font-size:10px;color:#aaa;">E</kbd> end strike</span>
+        <span><kbd style="background:#1e1e1e;border:1px solid #444;border-radius:2px;padding:1px 5px;font-size:10px;color:#aaa;">H</kbd> hold</span>
+        <span><kbd style="background:#1e1e1e;border:1px solid #444;border-radius:2px;padding:1px 5px;font-size:10px;color:#aaa;">S</kbd> strike</span>
+        <span><kbd style="background:#1e1e1e;border:1px solid #444;border-radius:2px;padding:1px 5px;font-size:10px;color:#aaa;">C</kbd> color</span>
+        <span><kbd style="background:#1e1e1e;border:1px solid #444;border-radius:2px;padding:1px 5px;font-size:10px;color:#aaa;">F</kbd> surface</span>
+        <span><kbd style="background:#1e1e1e;border:1px solid #444;border-radius:2px;padding:1px 5px;font-size:10px;color:#aaa;">M</kbd> mute</span>
+        <span><kbd style="background:#1e1e1e;border:1px solid #444;border-radius:2px;padding:1px 5px;font-size:10px;color:#aaa;">T</kbd> reset taper</span>
+        <span><kbd style="background:#1e1e1e;border:1px solid #444;border-radius:2px;padding:1px 5px;font-size:10px;color:#aaa;">Z</kbd> zero</span>
+        <span><kbd style="background:#1e1e1e;border:1px solid #444;border-radius:2px;padding:1px 5px;font-size:10px;color:#aaa;">R</kbd> reset</span>
+        <span><kbd style="background:#1e1e1e;border:1px solid #444;border-radius:2px;padding:1px 5px;font-size:10px;color:#aaa;">Space</kbd> freeze</span>
+        <span><kbd style="background:#1e1e1e;border:1px solid #444;border-radius:2px;padding:1px 5px;font-size:10px;color:#aaa;">drag</kbd> orbit</span>
+        <span><kbd style="background:#1e1e1e;border:1px solid #444;border-radius:2px;padding:1px 5px;font-size:10px;color:#aaa;">scroll</kbd> zoom</span>
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- Script loading order:
+       1. math.js    -- math.eigs() (must come before physics files)
+       2. p5.js      -- global p5 primitives
+       3. Tone.js    -- audio context
+       4. Physics files (ModalState, CrossSection, BeamBendingDefinition, BeamExtensionalDefinition)
+       5. Rendering / interaction / sound files
+       6. Menu.js    -- builds sidebar + tabs; vpBuildMenu available at setup() time
+       7. beam-sketch.js -- calls vpBuildMenu from setup() -->
+  <script src="lib/math.js"></script>
+  <script src="lib/p5.js"></script>
+  <script src="lib/Tone.js"></script>
+  <script src="physics/ModalState.js"></script>
+  <script src="physics/CrossSection.js"></script>
+  <script src="physics/BeamBendingDefinition.js"></script>
+  <script src="physics/BeamExtensionalDefinition.js"></script>
+  <script src="render/BeamVisualObserver.js"></script>
+  <script src="ui/BeamInteractionController.js"></script>
+  <script src="sound/BeamSoundObserver.js"></script>
+  <script src="ui/Nav.js"></script>
+  <script src="ui/HelperMode.js"></script>
+  <script src="ui/Menu.js"></script>
+  <script src="beam-sketch.js"></script>
+
+</body>
+</html>

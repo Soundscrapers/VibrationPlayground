@@ -1,0 +1,867 @@
+/* ================================================================
+   menu.css  --  Vibration Playground shared menu system
+   Covers: tool sidebar, control panel tabs, accessibility mode.
+   Loaded by all world pages via <link> in <head>.
+   ================================================================ */
+
+/* ----------------------------------------------------------------
+   Workspace: flex row containing sidebar + canvas side by side
+   ---------------------------------------------------------------- */
+#vp-workspace {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+}
+
+/* ----------------------------------------------------------------
+   Tool sidebar (#vp-tools)
+   Vertical strip of circular buttons, left of canvas.
+   ---------------------------------------------------------------- */
+#vp-tools {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 6px;
+  flex-shrink: 0;
+  width: 62px;
+  background: #0e0e0e;
+  border-right: 1px solid #1a1a1a;
+}
+
+/* Each tool button: circular outline, transparent fill by default */
+.vp-tool-btn {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  border: 1px solid #888;
+  background: transparent;
+  color: #999;
+  cursor: pointer;
+  font-family: 'IBM Plex Mono', 'SF Mono', 'Fira Mono', monospace;
+  font-size: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  line-height: 1.2;
+  transition: border-color 0.12s, background 0.12s, color 0.12s;
+  flex-shrink: 0;
+  padding: 0;
+}
+
+.vp-tool-btn:hover {
+  border-color: #bbb;
+  color: #ddd;
+}
+
+/* Active tool: brighter outline + blue fill tint */
+.vp-tool-btn.active {
+  border-color: #7af;
+  background: rgba(40, 80, 140, 0.25);
+  color: #adf;
+}
+
+/* Muted state: red tint */
+.vp-tool-btn.muted {
+  border-color: #f66;
+  background: rgba(80, 20, 20, 0.3);
+  color: #f88;
+}
+
+/* Momentary flash: very brief highlight on click for non-toggle buttons */
+.vp-tool-btn.flash {
+  border-color: #fff;
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+}
+
+/* Disabled tool (not available in this world): grayed, no hover, no click */
+.vp-tool-btn[aria-disabled="true"] {
+  opacity: 0.3;
+  cursor: default;
+  pointer-events: none;
+}
+
+/* Keyboard focus rings: visible blue outline for keyboard users.
+   :focus-visible fires only on keyboard focus, not on mouse click,
+   so the ring does not appear during normal mouse use. */
+.vp-tool-btn:focus-visible {
+  outline: 2px solid #7af;
+  outline-offset: 3px;
+}
+
+.vp-tab:focus-visible {
+  outline: 2px solid #7af;
+  outline-offset: -2px;
+}
+
+.vp-scene-btn:focus-visible {
+  outline: 2px solid #7af;
+  outline-offset: 2px;
+}
+
+.vp-act-btn:focus-visible {
+  outline: 2px solid #7af;
+  outline-offset: 2px;
+}
+
+/* ----------------------------------------------------------------
+   Scenarios flyout
+   Appears to the right of the sidebar when scenarios button is clicked.
+   #vp-tools must be position:relative for absolute child to anchor.
+   ---------------------------------------------------------------- */
+#vp-tools { position: relative; }
+
+#vp-scenes-flyout {
+  position: absolute;
+  left: 100%;
+  margin-left: 0;
+  min-width: 160px;
+  background: rgba(18, 18, 18, 0.95);
+  border: 1px solid #333;
+  border-radius: 4px;
+  padding: 8px;
+  display: none;
+  z-index: 25;
+}
+
+#vp-scenes-flyout.open {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* Scenario buttons inside flyout */
+.vp-scene-btn {
+  background: #1c1c1c;
+  border: 1px solid #2a2a2a;
+  color: #888;
+  font-family: 'IBM Plex Mono', 'SF Mono', 'Fira Mono', monospace;
+  font-size: 11px;
+  padding: 5px 10px;
+  border-radius: 3px;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.1s, color 0.1s;
+}
+
+.vp-scene-btn:hover {
+  background: #252525;
+  color: #ccc;
+  border-color: #444;
+}
+
+/* Section divider and header inside the scenarios flyout.
+   Used to separate the scenario list from the mode-shapes grid. */
+.vp-flyout-hdr {
+  color: #555;
+  font-family: 'IBM Plex Mono', 'SF Mono', 'Fira Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 6px 2px 2px;
+  border-top: 1px solid #2a2a2a;
+  margin-top: 2px;
+}
+
+/* 4-column grid of mode-shape buttons inside the flyout.
+   Each cell is equal width; buttons fill the cell.
+   Applies to both mass-world and string-world mode grids. */
+#flyout-mode-grid,
+#flyout-string-mode-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 3px;
+}
+
+/* Membrane world mode grid: 5 columns ((mx,my) labels are wider than integer labels). */
+#flyout-membrane-mode-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 3px;
+}
+
+/* Lattice world mode grid: 6 columns (tighter, more modes). */
+#flyout-lattice-mode-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 3px;
+}
+
+/* Individual mode button inside the flyout grid.
+   Inherits scene-btn palette; square-ish and centered. */
+.vp-flyout-mode-btn {
+  background: #1c1c1c;
+  border: 1px solid #2a2a2a;
+  color: #888;
+  font-family: 'IBM Plex Mono', 'SF Mono', 'Fira Mono', monospace;
+  font-size: 11px;
+  padding: 4px 2px;
+  border-radius: 3px;
+  cursor: pointer;
+  text-align: center;
+  transition: background 0.1s, color 0.1s;
+}
+
+.vp-flyout-mode-btn:hover {
+  background: #252525;
+  color: #ccc;
+  border-color: #444;
+}
+
+/* ----------------------------------------------------------------
+   Control panel (#vp-controls)
+   Document-flow div below the workspace.
+   ---------------------------------------------------------------- */
+#vp-controls {
+  border-top: 1px solid #1a1a1a;
+  background: #0e0e0e;
+}
+
+/* Tab button row */
+#vp-tab-bar {
+  display: flex;
+  gap: 0;
+  border-bottom: 1px solid #2a2a2a;
+}
+
+.vp-tab {
+  padding: 6px 16px;
+  font-size: 11px;
+  color: #555;
+  cursor: pointer;
+  border: 1px solid transparent;
+  border-bottom: none;
+  background: transparent;
+  font-family: 'IBM Plex Mono', 'SF Mono', 'Fira Mono', monospace;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  transition: color 0.12s;
+}
+
+.vp-tab:hover { color: #999; }
+
+.vp-tab.active {
+  color: #ccc;
+  background: #1a1a1a;
+  border-color: #2a2a2a;
+  /* hide the bar border behind the active tab */
+  border-bottom: 1px solid #1a1a1a;
+  margin-bottom: -1px;
+}
+
+/* Tab content panels: hidden by default, shown when active */
+.vp-tab-content {
+  display: none;
+  padding: 10px 12px;
+  color: #999;
+  font-family: 'IBM Plex Mono', 'SF Mono', 'Fira Mono', monospace;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.vp-tab-content.active { display: block; }
+
+/* ----------------------------------------------------------------
+   Nav bar A11Y toggle button
+   Sits at the right end of .nav-links.
+   ---------------------------------------------------------------- */
+.nav-a11y {
+  background: transparent;
+  border: 1px solid #2a2a2a;
+  color: #444;
+  font-family: 'IBM Plex Mono', 'SF Mono', 'Fira Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.06em;
+  padding: 2px 7px;
+  border-radius: 2px;
+  cursor: pointer;
+  transition: color 0.12s, border-color 0.12s;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.nav-a11y:hover {
+  color: #888;
+  border-color: #555;
+}
+
+body.vp-a11y .nav-a11y {
+  color: #7af;
+  border-color: #7af;
+}
+
+/* ----------------------------------------------------------------
+   Action button rows
+   Used for: add/remove mass, group actions, mode shapes, root pitch
+   ---------------------------------------------------------------- */
+
+/* Flexible wrap row of small action buttons */
+.vp-action-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+
+/* Small action/preset button */
+.vp-act-btn {
+  background: #1c1c1c;
+  border: 1px solid #2a2a2a;
+  color: #666;
+  font-family: 'IBM Plex Mono', 'SF Mono', 'Fira Mono', monospace;
+  font-size: 10px;
+  padding: 3px 8px;
+  border-radius: 2px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.1s, color 0.1s, border-color 0.1s;
+}
+
+.vp-act-btn:hover {
+  background: #252525;
+  color: #ccc;
+  border-color: #444;
+}
+
+/* Active state: blue highlight (e.g. force: on, selected root pitch) */
+.vp-act-btn.active {
+  color: #aef;
+  border-color: #7af;
+  background: #192030;
+}
+
+/* ----------------------------------------------------------------
+   Per-mass rows in the Geometry tab
+   ---------------------------------------------------------------- */
+
+/* One horizontal row per mass: label + two slider columns */
+.vp-mass-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 4px;
+  min-height: 22px;
+}
+
+/* Side label: L1, L2, R1, R2 ... */
+.vp-mass-lbl {
+  min-width: 24px;
+  text-align: right;
+  color: #4a4a4a;
+  font-size: 10px;
+  flex-shrink: 0;
+}
+
+/* One slider column: [param label] [slider] [value] */
+.vp-mass-col {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex: 1;
+  min-width: 0;  /* allow flex shrink on narrow panels */
+}
+
+/* Short parameter label inside a mass column (e.g. "m", "kG") */
+.vp-param-lbl {
+  color: #3a3a3a;
+  font-size: 9px;
+  min-width: 14px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+/* Numeric readout at right of a mass slider */
+.vp-param-val {
+  color: #666;
+  font-size: 10px;
+  min-width: 30px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+/* Sliders inside mass rows share the universal range styling */
+.vp-mass-col input[type="range"] {
+  flex: 1;
+  height: 4px;
+  -webkit-appearance: none;
+  appearance: none;
+  background: #252525;
+  border-radius: 2px;
+  cursor: pointer;
+  outline: none;
+  min-width: 0;
+}
+
+.vp-mass-col input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #7af;
+  cursor: pointer;
+}
+
+.vp-mass-col input[type="range"]::-moz-range-thumb {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #7af;
+  border: none;
+  cursor: pointer;
+}
+
+/* ----------------------------------------------------------------
+   Coupling rows between adjacent mass pairs
+   ---------------------------------------------------------------- */
+
+/* Indented row sitting between two mass rows */
+.vp-coup-row {
+  margin: 0 0 4px 30px;  /* indent by ~label width to visually nest */
+  min-height: 18px;
+}
+
+/* Coupling toggle button */
+.vp-coup-btn {
+  background: #111;
+  border: 1px dashed #252525;
+  color: #333;
+  font-family: 'IBM Plex Mono', 'SF Mono', 'Fira Mono', monospace;
+  font-size: 9px;
+  padding: 2px 8px;
+  border-radius: 2px;
+  cursor: pointer;
+  transition: all 0.1s;
+}
+
+.vp-coup-btn:hover {
+  color: #888;
+  border-color: #444;
+  border-style: solid;
+}
+
+/* Coupled state: green tint */
+.vp-coup-btn.coupled {
+  border-style: solid;
+  border-color: #3a7a4a;
+  color: #6bc;
+  background: #0d1a10;
+}
+
+/* Hovering a coupled button shows red warning (about to disconnect) */
+.vp-coup-btn.coupled:hover {
+  border-color: #f66;
+  color: #f88;
+  background: #1a0d0d;
+}
+
+/* ----------------------------------------------------------------
+   Contextual button zone (#vp-ctx-btns)
+   Sits at the bottom of #vp-tools, below the 5 static buttons.
+   Uses the same .vp-tool-btn style as static buttons.
+   Separator (border-top) only appears when the zone is non-empty,
+   via the :not(:empty) selector -- no extra DOM node required.
+   ---------------------------------------------------------------- */
+#vp-ctx-btns {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;   /* matches #vp-tools gap */
+  width: 100%;
+}
+
+#vp-ctx-btns:not(:empty) {
+  padding-top: 10px;
+  border-top: 1px solid #222;
+  margin-top: 2px;
+}
+
+body.vp-a11y #vp-ctx-btns {
+  gap: 16px;  /* matches body.vp-a11y #vp-tools gap */
+}
+
+/* ----------------------------------------------------------------
+   Forcing frequency readout (#vp-forcing-readout)
+   Appears below the contextual button zone when modal forcing is
+   active (F key).  Styled as a draggable rounded-rect button --
+   same look as .vp-scene-btn.  Drag up/down changes frequency.
+   Hidden by default; .visible class shows it.
+   ---------------------------------------------------------------- */
+#vp-forcing-readout {
+  display: none;
+  background: #1c1c1c;
+  border: 1px solid #2a2a2a;
+  border-radius: 3px;
+  color: #888;
+  font-family: 'IBM Plex Mono', 'SF Mono', 'Fira Mono', monospace;
+  font-size: 11px;
+  padding: 5px 6px;
+  text-align: center;
+  width: 50px;
+  box-sizing: border-box;
+  cursor: ns-resize;
+  user-select: none;
+}
+
+#vp-forcing-readout.visible {
+  display: block;
+}
+
+#vp-forcing-readout:hover {
+  background: #252525;
+  color: #ccc;
+  border-color: #444;
+}
+
+#vp-forcing-amp-readout {
+  display: none;
+  background: #1c1c1c;
+  border: 1px solid #2a2a2a;
+  border-radius: 3px;
+  color: #888;
+  font-family: 'IBM Plex Mono', 'SF Mono', 'Fira Mono', monospace;
+  font-size: 11px;
+  padding: 5px 6px;
+  text-align: center;
+  width: 50px;
+  box-sizing: border-box;
+  cursor: ns-resize;
+  user-select: none;
+}
+
+#vp-forcing-amp-readout.visible {
+  display: block;
+}
+
+#vp-forcing-amp-readout:hover {
+  background: #252525;
+  color: #ccc;
+  border-color: #444;
+}
+
+/* ----------------------------------------------------------------
+   Boundary condition edge indicators (membrane world)
+   Base class: bc-edge.  State classes: .fixed, .free.
+   _syncBCIndicators() in membrane.html sets el.className = 'bc-edge fixed/free'.
+   ---------------------------------------------------------------- */
+.bc-edge {
+  font-family: 'IBM Plex Mono', 'SF Mono', 'Fira Mono', monospace;
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 2px;
+  border: 1px solid #333;
+  color: #666;
+  white-space: nowrap;
+}
+
+.bc-edge.fixed {
+  color: #aac;
+  border-color: #557;
+  background: #12141c;
+}
+
+.bc-edge.free {
+  color: #666;
+  border-color: #333;
+  background: #111;
+}
+
+/* ================================================================
+   Accessibility mode  (body.vp-a11y)
+   All size increases are CSS-only: no JS DOM manipulation needed.
+   ================================================================ */
+
+/* Larger sidebar buttons */
+body.vp-a11y .vp-tool-btn {
+  width: 72px;
+  height: 72px;
+  font-size: 14px;
+}
+
+body.vp-a11y #vp-tools {
+  width: 84px;
+  gap: 16px;
+}
+
+/* Larger tab buttons */
+body.vp-a11y .vp-tab {
+  padding: 10px 22px;
+  font-size: 15px;
+}
+
+/* Larger tab content text and inputs */
+body.vp-a11y .vp-tab-content {
+  font-size: 15px;
+}
+
+body.vp-a11y .vp-tab-content input[type="range"] {
+  height: 8px;
+}
+
+/* Larger slider thumbs */
+body.vp-a11y .vp-tab-content input[type="range"]::-webkit-slider-thumb {
+  width: 20px;
+  height: 20px;
+}
+
+body.vp-a11y .vp-tab-content input[type="range"]::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+}
+
+body.vp-a11y .vp-tab-content .lbl,
+body.vp-a11y .vp-tab-content .val {
+  font-size: 15px;
+}
+
+/* ----------------------------------------------------------------
+   Control rows inside tab content panels
+   Each row: [label] [slider] [value readout]
+   ---------------------------------------------------------------- */
+
+/* Section header label (e.g. "universal") */
+.vp-ctrl-hdr {
+  color: #444;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+  margin-top: 4px;
+}
+
+/* One control row */
+.vp-ctrl-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  height: 20px;
+}
+
+/* Short label on the left */
+.vp-ctrl-row .lbl {
+  min-width: 40px;
+  text-align: right;
+  color: #555;
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  flex-shrink: 0;
+}
+
+/* Range slider: fills remaining space */
+.vp-ctrl-row input[type="range"] {
+  flex: 1;
+  height: 4px;
+  -webkit-appearance: none;
+  appearance: none;
+  background: #2a2a2a;
+  border-radius: 2px;
+  cursor: pointer;
+  outline: none;
+}
+
+.vp-ctrl-row input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #7af;
+  cursor: pointer;
+}
+
+.vp-ctrl-row input[type="range"]::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #7af;
+  border: none;
+  cursor: pointer;
+}
+
+/* Numeric readout on the right */
+.vp-ctrl-row .val {
+  min-width: 48px;
+  text-align: right;
+  color: #777;
+  font-size: 11px;
+  flex-shrink: 0;
+}
+
+/* ----------------------------------------------------------------
+   Checkbox rows: overlay toggles (mode shapes, modal energy, etc.)
+   ---------------------------------------------------------------- */
+
+/* One row: checkbox input + label text, same height as a ctrl-row */
+.vp-check-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 6px;
+  height: 20px;
+}
+
+/* The <label> wraps the input so the whole label text is clickable */
+.vp-check-row label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  color: #777;
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  user-select: none;
+}
+
+/* Style the checkbox itself to match the dark theme */
+.vp-check-row input[type="checkbox"] {
+  width: 12px;
+  height: 12px;
+  accent-color: #7af;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+/* ----------------------------------------------------------------
+   Helper Mode overlays (#vp-helper-tooltip, #vp-helper-panel)
+   Panel is a canvas-covering transparent overlay; tooltip floats near controls.
+   ---------------------------------------------------------------- */
+
+/* #canvas-container must be the positioning context for the panel overlay. */
+#canvas-container {
+  position: relative;
+}
+
+/* Floating tooltip: body-absolute, floats near hovered sidebar controls. */
+.vp-helper-tooltip {
+  display: none;         /* shown by JS only when helper mode is active */
+  position: absolute;
+  z-index: 200;
+  max-width: 280px;
+  background: rgba(10, 24, 10, 0.92);
+  border: 1px solid #3a6a3a;
+  color: #aaddaa;
+  font-family: 'IBM Plex Mono', 'SF Mono', 'Fira Mono', monospace;
+  font-size: 11px;
+  line-height: 1.5;
+  padding: 7px 10px;
+  border-radius: 4px;
+  pointer-events: none;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.55);
+}
+
+/* Panel: full-canvas transparent overlay sitting on top of the p5 canvas.
+   Outer div covers the canvas area entirely; pointer-events: none so orbit,
+   click, and drag pass through to the canvas beneath. */
+.vp-helper-panel {
+  display: none;               /* shown by body.vp-helper rule below */
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 50;                 /* above canvas (z=auto), below sidebar (z=25+) */
+  pointer-events: none;        /* clicks pass through to canvas */
+}
+
+body.vp-helper .vp-helper-panel {
+  display: block;
+}
+
+/* Content box: anchored bottom-left; semi-transparent dark background.
+   pointer-events: auto so buttons inside it remain clickable. */
+.vp-helper-content {
+  position: absolute;
+  bottom: 18px;
+  left: 18px;
+  max-width: 260px;
+  background: rgba(0, 12, 0, 0.62);
+  border: 1px solid rgba(80, 160, 80, 0.35);
+  border-radius: 4px;
+  padding: 10px 12px 10px;
+  pointer-events: auto;
+  backdrop-filter: blur(2px);  /* subtle frosted-glass on supporting browsers */
+}
+
+/* Step counter: "Step 2 / 7" */
+.vp-helper-step-label {
+  display: block;
+  font-family: 'IBM Plex Mono', 'SF Mono', 'Fira Mono', monospace;
+  font-size: 9px;
+  color: rgba(100, 180, 100, 0.7);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin-bottom: 5px;
+}
+
+/* Hint text: the instructional sentence. */
+.vp-helper-hint-text {
+  display: block;
+  font-family: 'IBM Plex Mono', 'SF Mono', 'Fira Mono', monospace;
+  font-size: 11px;
+  color: rgba(180, 230, 180, 0.92);
+  line-height: 1.55;
+  margin-bottom: 8px;
+}
+
+/* Button row: skip and turn-off sit side by side. */
+.vp-helper-btn-row {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+/* Shared action button base: skip and turn-off use this. */
+.vp-helper-action-btn {
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(70, 130, 70, 0.45);
+  color: rgba(100, 170, 100, 0.8);
+  font-family: 'IBM Plex Mono', 'SF Mono', 'Fira Mono', monospace;
+  font-size: 9px;
+  padding: 3px 7px;
+  border-radius: 2px;
+  cursor: pointer;
+  text-transform: lowercase;
+  transition: color 0.12s, border-color 0.12s, background 0.12s;
+}
+.vp-helper-action-btn:hover {
+  color: rgba(180, 240, 180, 1);
+  border-color: rgba(100, 190, 100, 0.7);
+  background: rgba(0, 20, 0, 0.5);
+}
+
+/* "Turn Off Helper" button: slightly more prominent than skip. */
+.vp-helper-off-btn {
+  color: rgba(160, 130, 100, 0.8);
+  border-color: rgba(130, 100, 70, 0.45);
+}
+.vp-helper-off-btn:hover {
+  color: rgba(230, 190, 140, 1);
+  border-color: rgba(180, 140, 100, 0.7);
+  background: rgba(20, 10, 0, 0.5);
+}
+
+/* Nav helper button: active state when helper mode is on. */
+#btn-helper.active {
+  color: #aaddaa;
+  border-color: #3a7a3a;
+  background: #0e1e0e;
+}
+
+/* ----------------------------------------------------------------
+   Frequency list: shown below mode-shape buttons in the Physics tab.
+   One line per mode: "n  XX.X Hz"
+   Grayed alongside the mode buttons when inactive (multi-string, etc.)
+   ---------------------------------------------------------------- */
+
+.vp-freq-list {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 10px;
+  color: #777;
+  white-space: pre;          /* preserve newlines and spacing */
+  line-height: 1.6;
+  margin-top: 6px;
+  margin-bottom: 4px;
+  padding-left: 2px;
+  transition: opacity 0.2s;
+}

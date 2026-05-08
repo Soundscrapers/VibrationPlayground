@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lattice — Vibration Playground</title>
+  <link rel="stylesheet" href="site.css">
+  <link rel="stylesheet" href="ui/menu.css">
+  <style>
+    body { background: #1e1e1e; margin: 0; }
+    #vp-outer { margin: 0 auto; }
+    #canvas-container { display: block; position: relative; }
+    #canvas-container canvas { display: block; }
+
+    /* Note-name label overlay: sits on top of the WEBGL canvas.
+       Pointer-events:none lets shift+click pass through to the canvas. */
+    #label-layer {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      pointer-events: none;
+      overflow: hidden;
+    }
+
+    /* One span per node, repositioned every frame from projected screen coords */
+    .node-label {
+      position: absolute;
+      transform: translate(-50%, -160%);
+      color: rgba(170, 210, 255, 0.82);
+      font-family: monospace;
+      font-size: 9px;
+      letter-spacing: 0.04em;
+      white-space: nowrap;
+      user-select: none;
+      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.95), 0 0 6px rgba(0, 0, 0, 0.7);
+    }
+
+    /* Stiffness readout: top-left corner of canvas during edge drag */
+    #stiffness-readout {
+      position: absolute;
+      top: 10px;
+      left: 14px;
+      font-size: 11px;
+      letter-spacing: 0.12em;
+      pointer-events: none;
+      font-family: 'IBM Plex Mono', 'SF Mono', 'Fira Mono', monospace;
+      color: rgba(170, 210, 255, 0.85);
+    }
+
+    /* Keyboard reference strip */
+    #info {
+      margin-top: 14px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px 24px;
+      color: #555;
+      font-family: 'IBM Plex Mono', 'SF Mono', 'Fira Mono', monospace;
+      font-size: 11px;
+    }
+    #info span { white-space: nowrap; }
+    #info .key {
+      background: #1e1e1e;
+      border: 1px solid #444;
+      border-radius: 2px;
+      padding: 1px 5px;
+      font-size: 10px;
+      color: #aaa;
+    }
+  </style>
+</head>
+<body data-page="lattice">
+
+  <nav id="vp-nav"></nav>
+
+  <div class="world-page">
+
+    <div id="vp-outer">
+
+      <!-- Flex row: sidebar + canvas side by side -->
+      <div id="vp-workspace">
+        <div id="vp-tools"></div>
+        <div id="canvas-container">
+          <!-- Note-name spans injected here by _initLabels() in setup() -->
+          <div id="label-layer"></div>
+          <!-- Stiffness readout: shown during edge-drag, hidden otherwise -->
+          <div id="stiffness-readout"></div>
+        </div>
+      </div>
+
+      <!-- Document-flow control panel below workspace -->
+      <div id="vp-controls">
+        <div id="vp-tab-bar"></div>
+        <div id="vp-tab-geometry" class="vp-tab-content"></div>
+        <div id="vp-tab-physics"  class="vp-tab-content"></div>
+        <div id="vp-tab-sound"    class="vp-tab-content"></div>
+      </div>
+
+    </div>
+
+    <!-- Prose: keyboard reference + axis legend + how-to explanation -->
+    <div class="world-prose">
+
+      <h2>How to play</h2>
+
+      <p>Similar to Mass World, the Lattice is a series of masses connected by "springs" to each other. The canvas shows a Tonnetz — a 19-node hexagonal lattice where each node is a pitch class and each edge is a harmonic interval. The three edge colors mark the three tonnetz axes: <span style="color:#7af">fifth</span> (3/2 ratio, horizontal), <span style="color:#af7">third</span> (5/4, upper-right diagonal), and <span style="color:#a7f">minor third</span> (6/5, lower-right diagonal). Edge opacity shows stiffness: transparent = loose, opaque = stiff.</p>
+
+      <p>Click a node to strike it. Use the hold tool to create a super-heavy mass (like a neutron star), which will make it work like a fixed node in the lattice. Dragging a node up/down changes its mass; dragging an edge up/down changes its stiffness. A drag that misses all nodes and edges orbits the camera. Scroll to zoom.</p>
+
+      <h3>Axis stiffness</h3>
+      <p>Use the three sliders in the Geometry tab to adjust coupling stiffness per axis independently. High stiffness on one axis makes energy flow preferentially along that tonnetz direction. The Scenarios flyout loads named configurations (isotropic, fifth highway, etc.). Keys 1–9 load additional tonal-pathway scenarios.</p>
+
+      <h3>Mode shapes</h3>
+      <p>Open the Physics tab and click a mode button to lock the lattice into that mode shape. The Sound tab shows current modal energy as a bar chart — one bar per mode. The sound can be chaotic in some of these modes. Try using one of the SCENE options to change the stiffness between nodes and simplify or color the soundscape in a certain musical key.</p>
+
+      <h3>Pitches, Notes, Frequencies</h3>
+      <p>Press <kbd>L</kbd> to cycle label modes: off → note names (A, E, C#) → note names + cents from equal temperament. The root node (center) is A; intervals follow just intonation ratios along each axis. Press <kbd>T</kbd> to toggle between traditional 12-step equal temperament and just-intonation. Notice the subtle difference between these tone alignments.</p>
+
+    </div>
+
+  </div>
+
+
+
+  <!-- Script loading order:
+       1. p5.js       -- global p5 primitives (random, map, lerp, ...)
+       2. math.js     -- math.eigs(), math.multiply(), etc.
+       3. Tone.js     -- audio context
+       4. LatticeDefinition.js  -- depends on math
+       5. ModalState.js         -- depends on p5 (random), math
+       6. LatticeInteractionController.js
+       7. LatticeSoundObserver.js
+       8. LatticeVisualObserver.js
+       9. Menu.js     -- builds sidebar + tabs; vpBuildMenu available at setup() time
+      10. lattice-sketch.js -- calls vpBuildMenu from setup() -->
+  <script src="lib/p5.js"></script>
+  <script src="lib/math.js"></script>
+  <script src="lib/Tone.js"></script>
+  <script src="physics/LatticeDefinition.js"></script>
+  <script src="physics/ModalState.js"></script>
+  <script src="ui/LatticeInteractionController.js"></script>
+  <script src="sound/LatticeSoundObserver.js"></script>
+  <script src="render/LatticeVisualObserver.js"></script>
+  <script src="ui/Nav.js"></script>
+  <script src="ui/HelperMode.js"></script>
+  <script src="ui/Menu.js"></script>
+  <script src="lattice-sketch.js"></script>
+
+</body>
+</html>

@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>About — Vibration Playground</title>
+  <link rel="stylesheet" href="site.css">
+</head>
+<body data-page="about">
+
+  <nav id="vp-nav"></nav>
+
+  <main class="landing">
+
+     <div class="world-prose">
+      <h1>About</h1>
+      <p>Vibration Playground is a prototype exploring the phenomena of vibration and wave motion. The demonstrations are meant to invite interaction and play as means to gaining an intuitive understanding of the physics. Visitors who wish to dive deeper into how each world operates can do so by opening a menu that reveals buttons and sliders for various parameters. </p>
+      <p> Coming Soon: The code repository will be available on Github.
+
+      <h2>Five worlds</h2>
+
+      <p><strong style="color:#ccc">Mass</strong> — Coupled oscillators on springs. Add masses, toggle coupling, change stiffness and ground springs. The discrete system where modal analysis begins. Euler-Lagrange equations solved by eigendecomposition; modes are the natural basis for motion.</p>
+
+      <p><strong style="color:#ccc">String</strong> — A vibrating string with wave propagation slow enough to watch. Modal superposition over standing-wave shapes; sound pitched independently via Karplus-Strong synthesis.</p>
+
+      <p><strong style="color:#ccc">Lattice</strong> — A Tonnetz hexagonal lattice where each node represents a note and the lattice defines harmonic intervals between the notes. Stiffness controls how energy flows between harmonically related pitches.</p>
+
+      <p><strong style="color:#ccc">Membrane</strong> — A two-dimensional rectangular membrane. Modes are products of one-dimensional standing waves; the non-integer frequency ratios give the characteristic inharmonic ring.</p>
+
+      <p><strong style="color:#ccc">Beam</strong> — An Euler-Bernoulli beam vibrating in 3D: bending in two planes plus longitudinal extensional waves. Dispersive bending spectrum (frequencies scale as n²) produces metallic ringing. Taper profile shapes the cross-section along the length.</p>
+
+      <hr>
+
+      <h2>Physics</h2>
+
+      <p>Every world is a modal system. The physics engine solves an eigenvalue problem for natural frequencies and mode shapes, then steps the modal coordinates forward in time.</p>
+      
+      <h2>References and Links</h2>
+      <p>This work stems from course work in Dr. Victor Sparrow's Elements of Acoustics and Vibration course at Penn State University. I am thankful to Dr. Sparrow for providing many demonstrations of wave behavior, some of which can be seen <a href="https://www.acs.psu.edu/drussell/Demos/Sparrow/Sparrow.html" target = "_blank">here</a>.  <a href="https://www.acs.psu.edu/drussell/demos.html" target = "_blank">Dr. Dan Russell</a> has also made many great demonstrations and those have been inspring material for this project. I also explored the wonderful Sound & Waves simulators on <a href="https://phet.colorado.edu/en/simulations/filter?subjects=sound-and-waves&type=html" target = "_blank">PhET</a> in preparation for building Vibration Playground.
+      <p>The following resources  were instrumental in Dr. Sparrow's course for understanding harmonic motion, multiple degree of freedom systems, and the vibration behavior of strings, membranes, beams and plates.
+      <br>
+      <p>Graff, K.L. (1975) <i>Wave Motion in Elastic Solids.</i> Ohio State University Press, Belfast, Ireland.<br>
+      <p>Kinsler, L.E., Frey, A.R., Coppens, A.B. and Sanders, J.V. (2000) <i>Fundamentals of Acoustics.</i> 4th Edition, John Wiley and Sons Inc., Hoboken.
+
+      <p class="physics-note">Built with <a href="https://p5js.org" target = "_blank" style="color:#7af">p5.js</a> (global mode, rendering), <a href="https://tonejs.github.io" target = "_blank" style="color:#7af">Tone.js</a> (Web Audio synthesis), and <a href="https://mathjs.org" target = "_blank" style="color:#7af">math.js</a> (eigendecomposition). AI assistants (Claude Code) were used in the construction of much of the code, with the physics work validated with the above references.</p>
+
+    </div>
+    <div>
+    <p>Vibration Playground was created by <a href="http://www.timbrearchitects.com/about.html" target = "_blank">Nicolas Sowers</a> and is copyright 2026 under the MIT License.
+
+  </main>
+
+  <script src="ui/Nav.js"></script>
+</body>
+</html>

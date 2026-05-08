@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Membrane — Vibration Playground</title>
+  <link rel="stylesheet" href="site.css">
+  <link rel="stylesheet" href="ui/menu.css">
+  <style>
+    body { background: #1e1e1e; margin: 0; }
+    #vp-outer { margin: 0 auto; }
+    #canvas-container canvas { display: block; }
+
+    /* Drive mode select: fits inside the vp-action-row with the drive button */
+    #drive-mode-select {
+      flex: 1;
+      background: #1c1c1c;
+      border: 1px solid #2a2a2a;
+      color: #666;
+      font-family: 'IBM Plex Mono', 'SF Mono', 'Fira Mono', monospace;
+      font-size: 10px;
+      padding: 3px 4px;
+      border-radius: 2px;
+      cursor: pointer;
+      outline: none;
+      min-width: 0;
+    }
+    #drive-mode-select:focus { border-color: #444; }
+  </style>
+</head>
+<body data-page="membrane">
+
+  <nav id="vp-nav"></nav>
+
+  <div class="world-page">
+
+    <div id="vp-outer">
+
+      <!-- Flex row: sidebar + canvas side by side -->
+      <div id="vp-workspace">
+        <div id="vp-tools"></div>
+        <div id="canvas-container"></div>
+      </div>
+
+      <!-- Document-flow control panel below workspace -->
+      <div id="vp-controls">
+        <div id="vp-tab-bar"></div>
+        <div id="vp-tab-geometry" class="vp-tab-content"></div>
+        <div id="vp-tab-physics"  class="vp-tab-content"></div>
+        <div id="vp-tab-sound"    class="vp-tab-content"></div>
+      </div>
+
+    </div>
+
+    <!-- ============================================================
+         How to play
+         ============================================================ -->
+    <div class="world-prose">
+
+      <h2>How to play</h2>
+
+      <p>The canvas shows a rectangular vibrating membrane — a 2D generalization of a string.  The vibration you see is the membrane surface rendered in perspective; the color gradient (check the box in the Physics menu to see the color gradient) shows displacement amplitude and phase.</p>
+
+      <p>Click anywhere on the canvas surface to begin.</p>
+
+      <h3>Strike</h3>
+
+      <p>Click anywhere on the membrane surface to deliver a Gaussian velocity impulse at that point. Striking the center excites modes with both indices odd (1,1), (1,3), (3,1), etc. — the modes that are non-zero at the center. Striking a corner excites all modes. Try striking at different positions to hear and see how the resulting timbre changes.</p>
+
+      <h3>Boundary conditions</h3>
+
+      <p>Click near any edge of the membrane to toggle its boundary condition between fixed (displacement = 0 at edge) and free (no constraint at edge). Open the Geometry tab to see the current state of each edge. The mode shapes and frequencies change with each toggle: fixed edges give sin functions; free edges give cos functions.</p>
+
+      <h3>Harmonic drive</h3>
+
+      <p>Open the Physics tab. Select a mode from the dropdown, then press <strong>drive</strong> (or the <strong>drive</strong> button in the sidebar). A sinusoidal point force is applied at the membrane center at the natural frequency of the selected mode. Energy builds up resonantly over several cycles. Watching the membrane settle into the driven mode shape demonstrates resonance. Press <kbd>0</kbd> to turn off the drive.</p>
+
+      <h3>Mode isolation</h3>
+
+      <p>Click one of the mode shape buttons in the Physics tab. Two-integer pairs (mx, my) label each mode. The membrane is locked into that mode shape, letting you hear and see the pure sinusoidal pattern. Click the same button again to release. Mode isolation conflicts with harmonic drive — activating one turns the other off.</p>
+
+      <h3>Aspect ratio</h3>
+
+      <p>Drag the Ly/Lx slider in the Geometry tab. When the membrane is square (1:1), some modes are degenerate — they share a natural frequency. Pairs like (2,1) and (1,2) are shown in amber. Changing the aspect ratio breaks degeneracies: the two mode frequencies split apart and you can hear the modes as separate tones.</p>
+
+      <hr>
+
+      <h3>What's happening underneath</h3>
+
+      <p class="physics-note">The membrane is solved analytically. Mode shapes are products of sin/cos functions on a rectangular domain. Similar to the string, we assume a small angle in order to simplify the equations of motion. Natural frequencies are omega_{mx,my} = pi * c * sqrt((mx/Lx)^2 + (my/Ly)^2), where c = sqrt(T/sigma). The simulation retains 30 modes and updates at 60 fps. Sound is modal additive synthesis: each mode contributes a sinusoidal tone at a musically scaled frequency, weighted by its current energy. </p>
+
+    </div>
+
+  </div>
+
+
+
+  <!-- _syncBCIndicators -- update the four boundary condition display spans.
+       membraneDef is a global defined by membrane-sketch.js setup().
+       Each span shows the edge name and current BC ('fixed' or 'free').
+       Called by membrane-sketch.js after any boundary toggle. -->
+  <script>
+    function _syncBCIndicators() {
+      if (typeof membraneDef === 'undefined') return;
+      const edges = ['left', 'right', 'bottom', 'top'];
+      const keys  = ['boundaryLeft', 'boundaryRight', 'boundaryBottom', 'boundaryTop'];
+      for (let i = 0; i < 4; i++) {
+        const el = document.getElementById('bc-' + edges[i]);
+        if (!el) continue;
+        const bc = membraneDef[keys[i]];
+        el.textContent = edges[i] + ': ' + bc;
+        el.className   = 'bc-edge ' + bc;   // 'bc-edge fixed' or 'bc-edge free'
+      }
+    }
+
+    // Initial sync: p5 setup() has already run by load time, so membraneDef
+    // is defined. setTimeout gives p5 a moment to finish initialization.
+    window.addEventListener('load', () => {
+      setTimeout(_syncBCIndicators, 200);
+    });
+  </script>
+
+  <!-- Script loading order:
+       1. p5.js       -- global p5 primitives (setup, draw, createCanvas, ...)
+       2. Tone.js     -- audio context (loaded before sketch to avoid race)
+       3. ModalState.js          -- depends on p5 (random)
+       4. MembraneDefinition.js  -- pure JS
+       5. MembraneInteractionController.js
+       6. MembraneSoundObserver.js
+       7. MembraneVisualObserver.js
+       8. Menu.js     -- builds sidebar + tabs; vpBuildMenu available at setup() time
+       9. membrane-sketch.js -- calls vpBuildMenu from setup() -->
+  <script src="lib/p5.js"></script>
+  <script src="lib/Tone.js"></script>
+  <script src="physics/ModalState.js"></script>
+  <script src="physics/MembraneDefinition.js"></script>
+  <script src="ui/MembraneInteractionController.js"></script>
+  <script src="sound/MembraneSoundObserver.js"></script>
+  <script src="render/MembraneVisualObserver.js"></script>
+  <script src="ui/Nav.js"></script>
+  <script src="ui/HelperMode.js"></script>
+  <script src="ui/Menu.js"></script>
+  <script src="membrane-sketch.js"></script>
+
+</body>
+</html>
