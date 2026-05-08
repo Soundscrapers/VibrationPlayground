@@ -1,9 +1,11 @@
-# VibrationPlayground
+# VibrationPlayground v0.21
 Vibration Playground is a prototype exploring the phenomena of vibration and wave motion. The demonstrations are meant to invite interaction and play as means to gaining an intuitive understanding of the physics. Tiered menus permit those who are curious about mode shapes and other physical aspects of wave motion to explore further.
 
 Vibration Playground is both a playable instrument and a transparent laboratory. Users disturb physical systems and observe how they evolve once released. Motion, sound, and energy transfer are treated as different views of the same underlying phenomenon—sound is not an accessory output but a first-class observable of vibration.
 
 The project is positioned between a textbook and a musical instrument. It prioritizes physical correctness, explicit assumptions, and analytical solutions over visual spectacle or numerical black-box simulation. Every animation and sound is traceable to a well-defined physical model.
+
+[A full playable version exists on the creator's website, www.timbrearchitects.com](https://www.timbrearchitects.com/vp/index.html)
 
 ### Key Principles
 
