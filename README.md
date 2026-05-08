@@ -5,7 +5,7 @@ Vibration Playground is both a playable instrument and a transparent laboratory.
 
 The project is positioned between a textbook and a musical instrument. It prioritizes physical correctness, explicit assumptions, and analytical solutions over visual spectacle or numerical black-box simulation. Every animation and sound is traceable to a well-defined physical model.
 
-[A full playable version exists on the creator's website, www.timbrearchitects.com](https://www.timbrearchitects.com/vp/index.html)
+[A full playable version](https://www.timbrearchitects.com/vp/index.html) exists on the creator's website, www.timbrearchitects.com
 
 ### Key Principles
 
